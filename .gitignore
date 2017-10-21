@@ -99,3 +99,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+dejavu/bin
+dejavu/include
+dejavu/lib
+dejavu/local
