@@ -1,3 +1,0 @@
-[submodule "dejavu/dejavu"]
-	path = dejavu/dejavu
-	url = git@github.com:cornell-cup/dejavu.git
