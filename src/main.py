@@ -2,20 +2,20 @@ from dejavu import Dejavu
 from dejavu.recognize import MicrophoneRecognizer
 
 config = {
-  "database": {
-    "host": "127.0.0.1",
-    "user" : "root",
-    "passwd" : "Operation2x",
-    "db" : "dejavu"
-  }
+	"database": {
+		"host": "127.0.0.1",
+		"user": "root",
+		"passwd": "root",
+		"db": "dejavu",
+	},
+	"database_type": "mysql",
+	"fingerprint_limit": 15
 }
 
 djv = Dejavu(config)
 
-djv.fingerprint_directory("mp3", [".mp3"], 3)
+djv.fingerprint_directory("songs", [".mp3"], 3)
 
-print djv.db.get_num_fingerprints()
-
-song = djv.recognize(MicrophoneRecognizer, seconds = 10)
+song = djv.recognize(MicrophoneRecognizer, seconds=15)
 
 print song
