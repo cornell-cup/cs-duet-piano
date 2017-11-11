@@ -3,5 +3,6 @@ import audioRec as Rec
 
 song = Rec.recognizeAudio()
 
-transcript = Midi.setSong(song)
+transcript = Midi.transcribe(song)
 
+print(transcript)

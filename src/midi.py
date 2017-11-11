@@ -8,8 +8,8 @@ def to_absolute_time(track):
 		now += msg.time
 	return messages
 
-def setSong(name):
-	midi = MidiFile(name)
+def transcribe(name):
+	midi = MidiFile("midi/"  + name + ".mid")
 	chordsOn, chordsOff = [], []
 	for i, track in enumerate(midi.tracks):
 		if i != 0:
