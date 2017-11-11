@@ -16,6 +16,6 @@ djv = Dejavu(config)
 
 djv.fingerprint_directory("songs", [".mp3"], 3)
 
-song = djv.recognize(MicrophoneRecognizer, seconds=15)
+song = djv.recognize(MicrophoneRecognizer, seconds=10)
 
-print song
+print(song)
