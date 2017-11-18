@@ -28,7 +28,6 @@ def transcribe(name):
 						track_off[msg.time].append(msg.note)
 			chordsOn.append(track_on)
 			chordsOff.append(track_off)
-
 	total = chordsOn + chordsOff
 
 	l, r = [], []
@@ -58,9 +57,12 @@ def transcribe(name):
 				right.append((key, [key_max]))
 		l.append(sorted(left))
 		r.append(sorted(right))
-	print(l[0])
-	print(l[1])
-	print(r[0])
-	print(r[1])
-# print(sorted(left))
-# print(sorted(right))
+	transcript = [l,r]
+	for i in l:
+		print i
+		print
+	for i in r:
+		print i
+		print
+
+	return transcript

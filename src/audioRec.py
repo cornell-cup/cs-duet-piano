@@ -17,7 +17,7 @@ def recognizeAudio():
 
 	djv.fingerprint_directory("songs", [".mp3"], 3)
 
-	song = djv.recognize(MicrophoneRecognizer, seconds=10)
+	song = djv.recognize(MicrophoneRecognizer, seconds=5)
 
 	print(song)
 	return song['song_name']
