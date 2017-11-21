@@ -1,5 +1,6 @@
 import midi as Midi
 import audioRec as Rec
+import tempo as Tempo
 import time
 import spidev
 import math
@@ -51,7 +52,7 @@ class Main:
 		self.time_current = time.time()*1000
 
 	def update_transcript(self):
-
+		return "hi"
 
 	def continue_match(self):
 		return "hi"
@@ -72,9 +73,9 @@ if __name__ == "__main__" :
 	# continue match()
 	noteOffset = 3
 	while True:
-		tempoSample = mido.MidiFile()
+		tempoSample = Midi.MidiFile()
 		tempoSamplePath = 'tempo.mid'
-		track = mido.MidiTrack()
+		track = Midi.MidiTrack()
 		now = time.time()
 		lastData = list() # last note value, last timestamp
 		lastTime = 0
@@ -84,15 +85,15 @@ if __name__ == "__main__" :
 			nowTime = time.time()
 		
 			if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
-				msg = mido.Message()
+				msg = Midi.Message()
 				for i in range (0, len(dataNotes)):
 					if dataNotes[i] == True and lastData[i] == False:
 						messageType = 'note_on'
-						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
+						msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
 					elif dataNotes[i] == False and lastData[i] == True:
 						messageType = 'note_off'
-						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
+						msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
 				lastData = dataNotes
 				lastTime = nowTime
