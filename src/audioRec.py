@@ -16,8 +16,8 @@ def recognizeAudio():
 	djv = Dejavu(config)
 
 	djv.fingerprint_directory("songs", [".mp3"], 3)
-
+	print "starting recognition"
 	song = djv.recognize(MicrophoneRecognizer, seconds=5)
-
+	print "finished recognition"
 	print(song)
 	return song['song_name']

@@ -58,11 +58,9 @@ def transcribe(name):
 		l.append(sorted(left))
 		r.append(sorted(right))
 	transcript = [l,r]
-	for i in l:
-		print i
-		print
-	for i in r:
-		print i
-		print
+
+	print l
+	print
+	print r
 
 	return transcript
