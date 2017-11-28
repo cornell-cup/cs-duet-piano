@@ -3,4 +3,4 @@
 ## Dependencies
 * [Pretty-Midi](http://craffel.github.io/pretty-midi/)
 * [Mido](https://github.com/olemb/mido)
-* [Spidev](https://github.com/doceme/py-spidev)
+* [WiringPi](https://github.com/WiringPi/WiringPi-Python)
