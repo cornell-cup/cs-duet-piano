@@ -6,7 +6,7 @@ import spidev
 import math
 from threading import Thread
 
-noteOffset = 3 #are notes zero indexed?
+noteOffset = 28 # are notes zero indexed?
 
 def hexToNote(hexcode):
 	hex = hexcode.encode("hex")
@@ -26,6 +26,7 @@ def getUniqueNotes(lastTime, lastData, dataNotes):
 	nowTime = time.time()
 	pressDown = []
 	letGo = []
+	track = []
 	if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 		msg = Midi.Message()
 		for i in range(len(dataNotes)):
@@ -43,6 +44,14 @@ def getUniqueNotes(lastTime, lastData, dataNotes):
 		lastTime = nowTime
 	return lastData, lastTime, pressDown, letGo
 
+'''
+Params: MIDI integer representation of the key that the pinkie should be on for either hand
+Returns: Hex string representation of the key
+'''
+def getPinkie(key):
+	return hex(key)
+
+
 class Main:
 	def __init__(self):
 		self.time_current = time.time()*1000
@@ -54,7 +63,6 @@ class Main:
 		self.right_index = 0
 		self.right_queue = []
 		self.transcript = []
-		self.initial_match()
 		self.human_played = []
 		self.human_letGo = []
 		self.human_tempo = 0
@@ -84,14 +92,26 @@ class Main:
 				if letGo != []:
 					self.human.letGo.append(letGo)
 
-		print(self.transcript)
 		self.time_current = time.time()*1000
 
+		print(self.transcript)
+
+	'''
+	Params: self.queue 
+	Returns: Updates queue. Pops off the oldest note and adds in a new note
+	'''
+	def update_queue(self):
+		print "Unimplemented"
+
+	'''
+	Params: Updates transcript based tempo
+	Returns: Tempo adjusted transcript
+	'''
 	def update_transcript(self):
-		return "hi"
+		print "Unimplemented"
 
 	def continue_match(self, pressDown, letGo):
-		return "hi"
+		print "Unimplemented"
 
 
 if __name__ == "__main__" :
