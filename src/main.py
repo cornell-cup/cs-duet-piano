@@ -3,6 +3,7 @@ import audioRec as Rec
 import tempo as Tempo
 import time
 import spidev
+import mido
 import math
 from threading import Thread
 
@@ -26,7 +27,7 @@ def getUniqueNotes(lastTime, lastData, dataNotes):
 	nowTime = time.time()
 	pressDown = []
 	letGo = []
-	dataNotes = [[0,note] for note in dataNotes]
+	dataNotes = [[0, note] for note in dataNotes]
 	if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 		##msg = Midi.Message()
 		for i in range(len(dataNotes)):
@@ -86,7 +87,6 @@ class Main:
 		set = Thread(target = self.setSong)
 		set.start()
 		print "running simultaneously"
-		count = 0
 		while self.transcript == []:
 			now = time.time()
 			lastData = [] # last note value, last timestamp
@@ -98,13 +98,13 @@ class Main:
 				if pressDown != []:
 					self.human_played.append(pressDown)
 				if letGo != []:
-					self.human.letGo.append(letGo)
+					self.human_letGo.append(letGo)
 
 		self.time_current = time.time()*1000
 
 		print(self.transcript)
 
-		human_average = sum(self.human_played)/len(self.human_played)
+		human_average = sum(self.human_played[0] + self.human_played[1])/len(self.human_played[0]+ self.human_played[1])
 		if human_average > 64:
 			self.human_side = "R"
 			self.robot_transcript = self.transcript[0]
@@ -113,9 +113,17 @@ class Main:
 			self.human_transcript = self.transcript[1]
 
 		#based on time_current and notes played by human, get robot note
-		skipTo = len(self.human_played)
-		currNote = self.human_transcript
-
+		skipToL, skipToR = len(self.human_played[0]),len(self.human_played[1])
+		currNoteL, currNoteR = self.human_transcript[0][skipToL], self.human_transcript[0][skipToR]
+		if currNoteL[1] == self.human_played[0][-1] and currNoteR[1] == self.human_played[1][-1]:
+			left_time = currNoteL[0]
+			right_time = currNoteR[0]
+			for entry in self.robot_transcript[0]:
+				if entry[0] > left_time:
+					nextNoteL = entry
+			for entry in self.robot_transcript[1]:
+				if entry[0] > right_time:
+					nextNoteR = entry
 
 
 	'''
@@ -142,17 +150,18 @@ if __name__ == "__main__" :
 	bus = ""
 	device = ""
 	spi.open(bus, device)
-	process.intial_match(spi)
+	process.initial_match(spi)
+	end = False
 	n = 0 # number of bytes
 	# get unique data from the spi thing
 	# convert hex to mido keys
 	# append to list that would store 5 seconds -> tempo matching () -> bpm -> 
 	# update tempo_scale = new bpm/old bpm
 	# continue match()
-	while True:
-		tempoSample = Midi.MidiFile()
+	while not end:
+		tempoSample = mido.MidiFile()
 		tempoSamplePath = 'tempo.mid'
-		track = Midi.MidiTrack()
+		track = mido.MidiTrack()
 		now = time.time()
 		lastData = [] # last note value, last timestamp
 		lastTime = 0
@@ -165,5 +174,7 @@ if __name__ == "__main__" :
 		tempoSample.save(tempoSamplePath)
 		bpm = Tempo.get_tempo_bpm(tempoSamplePath)
 		process.human_tempo = bpm
+		#song reaches end and end is true then
+		# need end of song check somewhere
 	spi.close()
 	process.continue_match()
