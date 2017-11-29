@@ -26,20 +26,23 @@ def getUniqueNotes(lastTime, lastData, dataNotes):
 	nowTime = time.time()
 	pressDown = []
 	letGo = []
-	track = []
+	dataNotes = [[0,note] for note in dataNotes]
 	if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
-		msg = Midi.Message()
+		##msg = Midi.Message()
 		for i in range(len(dataNotes)):
 			if dataNotes[i] == True and lastData[i] == False:
-				messageType = 'note_on'
-				msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
-				track.append(msg)
-				pressDown.append(dataNotes[i])
+				#messageType = 'note_on'
+				#msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
+				left, right = Midi.splitLR(dataNotes[i])
+				pressDown[0] += left
+				pressDown[1] += right
+
 			elif dataNotes[i] == False and lastData[i] == True:
-				messageType = 'note_off'
-				msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
-				track.append(msg)
-				letGo.append(dataNotes[i])
+				#messageType = 'note_off'
+				#msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
+				left, right = Midi.splitLR(dataNotes[i])
+				letGo[0] += left
+				letGo[1] += right
 		lastData = dataNotes
 		lastTime = nowTime
 	return lastData, lastTime, pressDown, letGo
@@ -56,15 +59,22 @@ class Main:
 	def __init__(self):
 		self.time_current = time.time()*1000
 		self.time_start = time.time()*1000
+
 		self.left_played = []
 		self.left_index = 0
 		self.left_queue = []
+
 		self.right_played = []
 		self.right_index = 0
 		self.right_queue = []
+
 		self.transcript = []
-		self.human_played = []
-		self.human_letGo = []
+		self.robot_transcript = []
+		self.human_transcript = []
+
+		self.human_side = ""
+		self.human_played = [[],[]]
+		self.human_letGo = [[],[]]
 		self.human_tempo = 0
 		self.tempo_scale = 1
 
@@ -78,10 +88,8 @@ class Main:
 		print "running simultaneously"
 		count = 0
 		while self.transcript == []:
-			data = spi.readbytes(n)
-			dataNotes = hexToNote(data) #true/false array
 			now = time.time()
-			lastData = list() # last note value, last timestamp
+			lastData = [] # last note value, last timestamp
 			lastTime = 0
 			while time.time() - now < 5:
 				data = spi.readbytes(n)
@@ -96,8 +104,22 @@ class Main:
 
 		print(self.transcript)
 
+		human_average = sum(self.human_played)/len(self.human_played)
+		if human_average > 64:
+			self.human_side = "R"
+			self.robot_transcript = self.transcript[0]
+		else:
+			self.human_side = "L"
+			self.human_transcript = self.transcript[1]
+
+		#based on time_current and notes played by human, get robot note
+		skipTo = len(self.human_played)
+		currNote = self.human_transcript
+
+
+
 	'''
-	Params: self.queue 
+	Params: self.queue represented as [five oldest notes, current note, five next notes]
 	Returns: Updates queue. Pops off the oldest note and adds in a new note
 	'''
 	def update_queue(self):
@@ -132,13 +154,13 @@ if __name__ == "__main__" :
 		tempoSamplePath = 'tempo.mid'
 		track = Midi.MidiTrack()
 		now = time.time()
-		lastData = list() # last note value, last timestamp
+		lastData = [] # last note value, last timestamp
 		lastTime = 0
 		while time.time() - now < 5:
 			data = spi.readbytes(n)
 			dataNotes = hexToNote(data)
 			lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
-			if pressDown != [] or letGo != []:
+			if pressDown != [[],[]] or letGo != [[],[]]:
 				process.continue_match(pressDown, letGo)
 		tempoSample.save(tempoSamplePath)
 		bpm = Tempo.get_tempo_bpm(tempoSamplePath)
