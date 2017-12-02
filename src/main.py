@@ -2,13 +2,12 @@ import midi as Midi
 import audioRec as Rec
 import tempo as Tempo
 import time
-import spidev
 import mido
+import wiringpi
 import math
 from threading import Thread
 
-noteOffset = 28
-# are notes zero indexed?
+noteOffset = 28 # zero indexed notes
 
 def hexToNote(hexcode):
 	hex = hexcode.encode("hex")
@@ -31,23 +30,21 @@ def getUniqueNotes(lastTime, lastData, dataNotes):
 	letGo = []
 	dataNotes = [[0, note] for note in dataNotes]
 	if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
-		##msg = Midi.Message()
 		for i in range(len(dataNotes)):
 			if dataNotes[i] == True and lastData[i] == False:
-				# messageType = 'note_on'
-				# msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
 				left, right = Midi.splitLR(dataNotes[i])
 				pressDown[0] += left
 				pressDown[1] += right
+				lastData = dataNotes
+				lastTime = nowTime
 
 			elif dataNotes[i] == False and lastData[i] == True:
-				# messageType = 'note_off'
-				# msg = Midi.Message(messageType, note=(noteOffset + i), velocity=64, time=math.floor(time.time()))
 				left, right = Midi.splitLR(dataNotes[i])
 				letGo[0] += left
 				letGo[1] += right
-		lastData = dataNotes
-		lastTime = nowTime
+				lastData = dataNotes
+				lastTime = nowTime
+		
 	return lastData, lastTime, pressDown, letGo
 
 
@@ -97,7 +94,7 @@ class Main:
 			lastData = []  # last note value, last timestamp
 			lastTime = 0
 			while time.time() - now < 5:
-				data = spi.readbytes(n)
+				data = wriringpi.digitalRead(23) #pin 23
 				dataNotes = hexToNote(data)
 				lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
 				if pressDown != []:
@@ -187,14 +184,19 @@ class Main:
 
 if __name__ == "__main__":
 	process = Main()
-	spi = spidev.SpiDev()
-	bus, device = "", ""
-	spi.open(bus, device)
-	process.initial_match(spi)
-	end = False
-	n = 0  # number of bytes
-
-	# get unique data from the spi thing
+	process.intial_match()
+	#pins: 7 hand f,8 hand f,24 sensors,23 step
+	wiringpi.wiringPiSetupGpio()	
+	channel = 1
+	speed = 500000
+	wiringpi.wiringPiSPISetup(channel, speed)
+	wiringpi.pinMode(7, 1)
+	wiringpi.pinMode(8, 1)
+	wiringpi.pinMode(23, 1)
+	wiringpi.pinMode(24, 1)
+	buf = "hello"
+	retlen, retdata = wiringpi.wiringPiSPIDataRW(0, buf)
+	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
 	# append to list that would store 5 seconds -> tempo matching () -> bpm -> 
 	# update tempo_scale = new bpm/old bpm
@@ -208,15 +210,28 @@ if __name__ == "__main__":
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
 		while time.time() - now < 5:
-			data = spi.readbytes(n)
+			data = wriringpi.digitalRead(24) #pin 24
 			dataNotes = hexToNote(data)
 			lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
 			if pressDown != [[], []] or letGo != [[], []]:
 				process.continue_match(pressDown, letGo)
-		tempoSample.save(tempoSamplePath)
-		bpm = Tempo.get_tempo_bpm(tempoSamplePath)
-		process.human_tempo = bpm
-	# song reaches end and end is true then
-	# need end of song check somewhere
-	spi.close()
-	process.continue_match()
+			# song reaches end and end is true then
+			# need end of song check somewhere
+			nowTime = time.time()
+		
+			if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
+				msg = mido.Message()
+				for i in range (0, len(dataNotes)):
+					if dataNotes[i] == True and lastData[i] == False:
+						messageType = 'note_on'
+						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
+						track.append(msg)
+					elif dataNotes[i] == False and lastData[i] == True:
+						messageType = 'note_off'
+						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
+						track.append(msg)
+				process.continue_match(msg)
+				tempoSample.save(tempoSamplePath)
+				bpm = Tempo.get_tempo_bpm(tempoSamplePath)
+				process.human_tempo = bpm
+		process.continue_match()
