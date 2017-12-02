@@ -102,8 +102,6 @@ class Main:
 				if letGo != []:
 					self.human_letGo.append(letGo)
 
-		self.time_current = time.time() * 1000
-
 		print(self.transcript)
 
 		human_average = sum(self.human_played[0] + self.human_played[1]) / len(
@@ -133,7 +131,14 @@ class Main:
 
 		self.parse_transcript(max(left_time, left_time2, right_time, right_time2))
 
-		return self.notesUpdate
+		self.play_note()
+
+	def play_note(self):
+		self.time_current = time.time()*1000
+		while self.time_current!= self.nextTime:
+			self.time_current = time.time()*1000
+		# TODO WRITE MSG TO RASPBERYY PI
+
 
 	'''
 		Params: [i] represents which part of the transcript, [latest_time] represents time of the last action done so far
@@ -191,7 +196,6 @@ class Main:
 	Returns: Tempo adjusted transcript
 	'''
 	def update_transcript(self):
-		#multiplier = self.tempo_scale
 		#partitions of not-played notes
 		l_press = self.robot_transcript[0][self.left_index[0]:]
 		l_letgo = self.robot_transcript[2][self.left_index[1]:]
