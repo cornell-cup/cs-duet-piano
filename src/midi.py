@@ -65,6 +65,6 @@ def transcribe(name):
 		l.append(sorted(left))
 		r.append(sorted(right))
 
-	transcript = [[l[0], r[0], l[2], r[2]],[l[1],r[1], l[3], r[3]]]
+	transcript = [ [l[0], r[0], l[2], r[2]], [l[1],r[1], l[3], r[3]]]
 
 	return transcript #[primo, secondo] where primo [L, R] and secondo [L and R]

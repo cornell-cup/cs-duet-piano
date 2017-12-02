@@ -135,6 +135,11 @@ class Main:
 
 		return self.notesUpdate
 
+	'''
+		Params: [i] represents which part of the transcript, [latest_time] represents time of the last action done so far
+		Returns: Parses through transcripts and tries to find the time of the next action
+				returns a list of notes for a particular 'next time'
+	'''
 	def parse_transcript(self, latest_time):
 		update = {0: [], 1: [], 2: [], 3: []}
 		for i in range(len(self.robot_transcript), 0, -1):
@@ -147,22 +152,32 @@ class Main:
 			else:
 				self.notesUpdate[i] = next
 
+	'''
+	Params: [i] represents which part of the transcript, [latest_time] represents time of the last action done so far
+	Returns: Parses through transcripts and tries to find the time of the next action
+			sets the index of last played in transcript
+			returns a list of notes for a particular 'next time'
+	'''
 	def find_next(self, i , latest_time):
 		transcript = self.robot_transcript[i]
 		next = []
 		self.nextTime = -1
-		for entry in transcript:
-			if entry[0] > latest_time and (self.nextTime == -1 or self.nextTime > entry[0]):
-				self.nextTime = entry[0]
-				next.append(entry[1])
-			elif entry[0] == self.nextTime:
-				self.next.append(entry[1])
-			elif entry[0] > self.nextTime:
+		for t in range(transcript):
+			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
+				self.nextTime =  transcript[t][0]
+				next.append( transcript[t][1])
+			elif  transcript[t][0] > self.nextTime:
+				if i == 0:
+					self.left_index[0] = t
+				if i == 2:
+					self.left_index[1] = t
+				if i == 1:
+					self.right_index[0] = t
+				if i == 3:
+					self.right_index[1] = t
 				break
 		next = [self.nextTime, next]
 		return next
-
-
 
 	'''
 	Params: self.queue represented as [five oldest notes, current note, five next notes]
@@ -172,11 +187,25 @@ class Main:
 		print "Unimplemented"
 
 	'''
-	Params: Updates transcript based tempo
+	Params: Updates future transcript based tempo
 	Returns: Tempo adjusted transcript
 	'''
 	def update_transcript(self):
-		print "Unimplemented"
+		#multiplier = self.tempo_scale
+		#partitions of not-played notes
+		l_press = self.robot_transcript[0][self.left_index[0]:]
+		l_letgo = self.robot_transcript[2][self.left_index[1]:]
+		r_press = self.robot_transcript[1][self.right_index[0]:]
+		r_letgo = self.robot_transcript[3][self.right_index[1]:]
+		lst = [l_press, l_letgo, r_press, r_letgo]
+
+		for l in lst:
+			start = l[0]
+			rest = l[1:]
+			for chord in l:
+				delta = chord[0] - start
+				chord[0] = delta/float(self.tempo_scale)
+
 
 	def continue_match(self, pressDown, letGo):
 		print "Unimplemented"
