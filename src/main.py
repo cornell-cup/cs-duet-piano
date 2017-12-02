@@ -94,7 +94,7 @@ class Main:
 			lastData = []  # last note value, last timestamp
 			lastTime = 0
 			while time.time() - now < 5:
-				data = wriringpi.digitalRead(23) #pin 23
+				data = wiringpi.digitalRead(23) #pin 23
 				dataNotes = hexToNote(data)
 				lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
 				if pressDown != []:
@@ -195,6 +195,7 @@ if __name__ == "__main__":
 	wiringpi.pinMode(23, 1)
 	wiringpi.pinMode(24, 1)
 	buf = "hello"
+	end = False
 	retlen, retdata = wiringpi.wiringPiSPIDataRW(0, buf)
 	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
@@ -210,7 +211,7 @@ if __name__ == "__main__":
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
 		while time.time() - now < 5:
-			data = wriringpi.digitalRead(24) #pin 24
+			data = wiringpi.digitalRead(24) #pin 24
 			dataNotes = hexToNote(data)
 			lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
 			if pressDown != [[], []] or letGo != [[], []]:
