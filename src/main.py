@@ -64,6 +64,8 @@ class Main:
 		self.time_current = time.time() * 1000
 		self.time_start = time.time() * 1000
 
+		self.notesUpdate = {0: [], 1: [], 2: [], 3: []}
+
 		self.left_played = []
 		self.left_index = 0
 		self.left_queue = []
@@ -117,17 +119,53 @@ class Main:
 			self.human_transcript = self.transcript[1]
 
 		# based on time_current and notes played by human, get robot note
-		skipToL, skipToR = len(self.human_played[0]), len(self.human_played[1])
-		currNoteL, currNoteR = self.human_transcript[0][skipToL], self.human_transcript[0][skipToR]
-		if currNoteL[1] == self.human_played[0][-1] and currNoteR[1] == self.human_played[1][-1]:
+		skipToL, skipToR, skipToL2, skipToR2 = len(self.human_played[0]), len(self.human_played[1]), \
+											   len(self.human_letGo[0]), len(self.human_letGo[1])
+
+		currNoteL, currNoteR, letGoL, letGoR = self.human_transcript[0][skipToL], self.human_transcript[1][skipToR],\
+											   self.human_transcript[2][skipToL2], self.human_transcript[3][skipToR2]
+
+		if currNoteL[1] == self.human_played[0][-1]:
 			left_time = currNoteL[0]
+		if currNoteR[1] == self.human_played[1][-1]:
 			right_time = currNoteR[0]
-			for entry in self.robot_transcript[0]:
-				if entry[0] > left_time:
-					nextNoteL = entry
-			for entry in self.robot_transcript[1]:
-				if entry[0] > right_time:
-					nextNoteR = entry
+		if letGoL[1] == self.human_letGo[0][-1]:
+			left_time2 = letGoL[1]
+		if letGoR[1] == self.human_letGo[1][-1]:
+			right_time2 = letGoR[1]
+
+		self.parse_transcript(max(left_time, left_time2, right_time, right_time2))
+
+		return self.notesUpdate
+
+	def parse_transcript(self, latest_time):
+		update = {0: [], 1: [], 2: [], 3: []}
+		for i in range(len(self.robot_transcript), 0, -1):
+			next = self.find_next(i, latest_time)
+			if next[0] > self.nextTime:
+				next = []
+			if i == 0 or i == 1:
+				prevNotes = list(set(self.notesUpdate[i+2])^set(self.notesUpdate[i]))
+				self.notesUpdate[i] = list(set(prevNotes + next)).sort()  #not sure if sort is necessary
+			else:
+				self.notesUpdate[i] = next
+
+	def find_next(self, i , latest_time):
+		transcript = self.robot_transcript[i]
+		next = []
+		self.nextTime = -1
+		for entry in transcript:
+			if entry[0] > latest_time and (self.nextTime == -1 or self.nextTime > entry[0]):
+				self.nextTime = entry[0]
+				next.append(entry[1])
+			elif entry[0] == self.nextTime:
+				self.next.append(entry[1])
+			elif entry[0] > self.nextTime:
+				break
+		next = [self.nextTime, next]
+		return next
+
+
 
 	'''
 	Params: self.queue represented as [five oldest notes, current note, five next notes]
