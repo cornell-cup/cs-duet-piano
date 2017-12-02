@@ -206,7 +206,7 @@ class Main:
 		for l in lst:
 			start = l[0]
 			rest = l[1:]
-			for chord in l:
+			for chord in rest:
 				delta = chord[0] - start
 				chord[0] = delta/float(self.tempo_scale)
 
