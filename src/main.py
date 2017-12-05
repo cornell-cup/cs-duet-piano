@@ -23,31 +23,6 @@ def hexToNote(hexcode):
 				pressed.append(False)
 	return pressed
 
-
-def getUniqueNotes(lastTime, lastData, dataNotes):
-	nowTime = time.time()
-	pressDown = []
-	letGo = []
-	dataNotes = [[0, note] for note in dataNotes]
-	if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
-		for i in range(len(dataNotes)):
-			if dataNotes[i] == True and lastData[i] == False:
-				left, right = Midi.splitLR(dataNotes[i])
-				pressDown[0] += left
-				pressDown[1] += right
-				lastData = dataNotes
-				lastTime = nowTime
-
-			elif dataNotes[i] == False and lastData[i] == True:
-				left, right = Midi.splitLR(dataNotes[i])
-				letGo[0] += left
-				letGo[1] += right
-				lastData = dataNotes
-				lastTime = nowTime
-		
-	return lastData, lastTime, pressDown, letGo
-
-
 '''
 Params: MIDI integer representation of the key that the pinkie should be on for either hand
 Returns: Hex string representation of the key
@@ -81,6 +56,9 @@ class Main:
 		self.human_tempo = 0
 		self.tempo_scale = 1
 
+		self.letGo = [[],[]]
+		self.pressDown = [[],[]]
+
 	def setSong(self):
 		song = Rec.recognizeAudio()
 		self.transcript = Midi.transcribe(song)
@@ -96,7 +74,7 @@ class Main:
 			while time.time() - now < 5:
 				data = wiringpi.digitalRead(23) #pin 23
 				dataNotes = hexToNote(data)
-				lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
+				lastData, lastTime, pressDown, letGo = self.getUniqueNotes(lastTime, lastData, dataNotes)
 				if pressDown != []:
 					self.human_played.append(pressDown)
 				if letGo != []:
@@ -132,6 +110,27 @@ class Main:
 		self.parse_transcript(max(left_time, left_time2, right_time, right_time2))
 
 		self.play_note()
+
+	def getUniqueNotes(self, lastTime, lastData, dataNotes):
+		nowTime = time.time()
+		dataNotes = [[0, note] for note in dataNotes]
+		if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
+			for i in range(len(dataNotes)):
+				if dataNotes[i] == True and lastData[i] == False:
+					left, right = Midi.splitLR(dataNotes[i])
+					self.pressDown[0] += left
+					self.pressDown[1] += right
+					lastData = dataNotes
+					lastTime = nowTime
+
+				elif dataNotes[i] == False and lastData[i] == True:
+					left, right = Midi.splitLR(dataNotes[i])
+					self.letGo[0] += left
+					self.letGo[1] += right
+					lastData = dataNotes
+					lastTime = nowTime
+
+		return lastData, lastTime
 
 	def play_note(self):
 		self.time_current = time.time()*1000
@@ -245,10 +244,12 @@ if __name__ == "__main__":
 		now = time.time()
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
+		pressDown = []
+		letGo = []
 		while time.time() - now < 5:
 			data = wiringpi.digitalRead(24) #pin 24
 			dataNotes = hexToNote(data)
-			lastData, lastTime, pressDown, letGo = getUniqueNotes(lastTime, lastData, dataNotes)
+
 			if pressDown != [[], []] or letGo != [[], []]:
 				process.continue_match(pressDown, letGo)
 			# song reaches end and end is true then
@@ -262,12 +263,23 @@ if __name__ == "__main__":
 						messageType = 'note_on'
 						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
+						left, right = Midi.splitLR(dataNotes[i])
+						process.pressDown[0] += left
+						process.pressDown[1] += right
+
 					elif dataNotes[i] == False and lastData[i] == True:
 						messageType = 'note_off'
 						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
-				process.continue_match(msg)
+						left, right = Midi.splitLR(dataNotes[i])
+						process.letGo[0] += left
+						process.letGo[1] += right
+
 				tempoSample.save(tempoSamplePath)
 				bpm = Tempo.get_tempo_bpm(tempoSamplePath)
+
+				process.tempo_scale = bpm/process.human_tempo
 				process.human_tempo = bpm
+
+				process.continue_match()
 		process.continue_match()
