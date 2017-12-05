@@ -240,6 +240,8 @@ if __name__ == "__main__":
 		tempoSample = mido.MidiFile()
 		tempoSamplePath = 'tempo.mid'
 		track = mido.MidiTrack()
+		tempoSample.tracks.append(track)
+
 		now = time.time()
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
