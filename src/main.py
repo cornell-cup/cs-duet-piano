@@ -128,7 +128,7 @@ class Main:
 					played.append([0, i])
 				elif dataNotes[i] == False and lastData[i] == True:
 					letGo.append([0, i])
-					
+
 		#parsing based on splitting keyboard in half
 		if self.human_side == "L": #robot plays notes greater than 64
 			played = [note for note in played if note >64]
@@ -139,13 +139,11 @@ class Main:
 
 		#else: initial match -> do not know yet. its all human
 
-		left, right = Midi.splitLR(dataNotes[i])
+		left, right = Midi.splitLR(played)
 		self.pressDown[0] += left
 		self.pressDown[1] += right
-		lastData = dataNotes
-		lastTime = nowTime
 
-		left, right = Midi.splitLR(dataNotes[i])
+		left, right = Midi.splitLR(letGo)
 		self.letGo[0] += left
 		self.letGo[1] += right
 		lastData = dataNotes
