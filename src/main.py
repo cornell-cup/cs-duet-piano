@@ -129,6 +129,7 @@ class Main:
 				elif dataNotes[i] == False and lastData[i] == True:
 					letGo.append([0, i])
 
+		#TODO PARSE BETWEEN ROBOT AND HUMAN
 		left, right = Midi.splitLR(dataNotes[i])
 		self.pressDown[0] += left
 		self.pressDown[1] += right
