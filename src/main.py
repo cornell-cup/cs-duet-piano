@@ -39,11 +39,11 @@ class Main:
 		self.notesUpdate = {0: [], 1: [], 2: [], 3: []}
 
 		self.left_played = []
-		self.left_index = 0
+		self.left_index = [[],[]]
 		self.left_queue = []
 
 		self.right_played = []
-		self.right_index = 0
+		self.right_index = [[],[]]
 		self.right_queue = []
 
 		self.transcript = []
@@ -58,6 +58,8 @@ class Main:
 
 		self.letGo = [[],[]]
 		self.pressDown = [[],[]]
+
+		self.nextTime = -1
 
 	def setSong(self):
 		song = Rec.recognizeAudio()
@@ -152,7 +154,7 @@ class Main:
 				next = []
 			if i == 0 or i == 1:
 				prevNotes = list(set(self.notesUpdate[i+2])^set(self.notesUpdate[i]))
-				self.notesUpdate[i] = list(set(prevNotes + next)).sort()  #not sure if sort is necessary
+				self.notesUpdate[i] = list(set(prevNotes + next)).sort()  #not sure if sorting is necessary
 			else:
 				self.notesUpdate[i] = next
 
@@ -164,13 +166,17 @@ class Main:
 	'''
 	def find_next(self, i , latest_time):
 		transcript = self.robot_transcript[i]
+		if i == 0:
+			transcript = transcript[self.left_index[0]:]
+		if i == 2:
+			transcript = transcript[self.left_index[1]:]
+		if i == 1:
+			transcript = transcript[self.right_index[0]:]
+		if i == 3:
+			transcript = transcript[self.right_index[1]:]
 		next = []
-		self.nextTime = -1
 		for t in range(transcript):
-			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
-				self.nextTime =  transcript[t][0]
-				next.append( transcript[t][1])
-			elif  transcript[t][0] > self.nextTime:
+			if  transcript[t][0] > self.nextTime:
 				if i == 0:
 					self.left_index[0] = t
 				if i == 2:
@@ -180,12 +186,15 @@ class Main:
 				if i == 3:
 					self.right_index[1] = t
 				break
+			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
+				self.nextTime =  transcript[t][0]
+				next.append( transcript[t][1])
 		next = [self.nextTime, next]
 		return next
 
 	'''
-	Params: self.queue represented as [five oldest notes, current note, five next notes]
-	Returns: Updates queue. Pops off the oldest note and adds in a new note
+	Params: self.queue represented as [five oldest notes, current note, all the unplayed notes]
+	Returns: Updates queue. Pops off the oldest note, shifts the current over
 	'''
 	def update_queue(self):
 		print "Unimplemented"
@@ -280,6 +289,6 @@ if __name__ == "__main__":
 
 				process.tempo_scale = bpm/process.human_tempo
 				process.human_tempo = bpm
-
+				process.update_transcript()
 				process.continue_match()
 		process.continue_match()
