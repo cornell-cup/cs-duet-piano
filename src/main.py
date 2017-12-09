@@ -84,8 +84,8 @@ class Main:
 
 		print(self.transcript)
 
-		human_average = sum(self.human_played[0] + self.human_played[1]) / len(
-			self.human_played[0] + self.human_played[1])
+		human_average = sum(self.human_played[0] + self.human_played[1]) / \
+						len(self.human_played[0] + self.human_played[1])
 		if human_average > 64:
 			self.human_side = "R"
 			self.robot_transcript = self.transcript[0]
@@ -138,11 +138,13 @@ class Main:
 		self.time_current = time.time()*1000
 		while self.time_current!= self.nextTime:
 			self.time_current = time.time()*1000
-		# TODO WRITE MSG TO RASPBERYY PI
+		# TODO WRITE MSG TO RASPBERRY PI
+		# TODO MSG: (left and right pinkie position, left and right finger positions)
+		# play self.notesUpdate after analyzing it
 
 
 	'''
-		Params: [i] represents which part of the transcript, [latest_time] represents time of the last action done so far
+		Params: [latest_time] represents time of the last action done so far
 		Returns: Parses through transcripts and tries to find the time of the next action
 				returns a list of notes for a particular 'next time'
 	'''
@@ -212,8 +214,19 @@ class Main:
 				chord[0] = delta/float(self.tempo_scale)
 
 
+	def checkPlaying(self):
+		print ("Unimplemented")
+
+
 	def continue_match(self, pressDown, letGo):
-		print "Unimplemented"
+		#TODO check if note played was the correct note
+		self.left_played[0] += pressDown[0]
+		self.left_played[1] += letGo[0]
+		self.right_played[0] += pressDown[1]
+		self.right_played[1] += letGo[1]
+		self.parse_transcript(self.time_current)
+
+
 
 
 if __name__ == "__main__":
@@ -265,6 +278,7 @@ if __name__ == "__main__":
 						messageType = 'note_on'
 						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
+						#TODO split between human and robot
 						left, right = Midi.splitLR(dataNotes[i])
 						process.pressDown[0] += left
 						process.pressDown[1] += right
@@ -273,6 +287,7 @@ if __name__ == "__main__":
 						messageType = 'note_off'
 						msg = mido.Message(messageType, note=(noteOffset + i), velocity=64, time = math.floor(time.time()))
 						track.append(msg)
+						#TODO split between human and robot
 						left, right = Midi.splitLR(dataNotes[i])
 						process.letGo[0] += left
 						process.letGo[1] += right
