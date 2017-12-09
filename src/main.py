@@ -69,6 +69,7 @@ class Main:
 		set = Thread(target=self.setSong)
 		set.start()
 		print "running simultaneously"
+		#TODO MANUAL NOTE CHECK
 		while self.transcript == []:
 			now = time.time()
 			lastData = []  # last note value, last timestamp
@@ -243,7 +244,7 @@ if __name__ == "__main__":
 	wiringpi.pinMode(24, 1)
 	buf = "hello"
 	end = False
-	retlen, retdata = wiringpi.wiringPiSPIDataRW(0, buf)
+	retlen, retdata = wiringpi.wiringPiSPIDataRW(channel, buf)
 	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
 	# append to list that would store 5 seconds -> tempo matching () -> bpm -> 
