@@ -193,13 +193,6 @@ class Main:
 		return next
 
 	'''
-	Params: self.queue represented as [five oldest notes, current note, all the unplayed notes]
-	Returns: Updates queue. Pops off the oldest note, shifts the current over
-	'''
-	def update_queue(self):
-		print "Unimplemented"
-
-	'''
 	Params: Updates future transcript based tempo
 	Returns: Tempo adjusted transcript
 	'''
