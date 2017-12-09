@@ -114,25 +114,32 @@ class Main:
 
 		self.play_note()
 
+	'''
+			Params: [latest_time] represents time of the last action done so far
+			Returns: Parses through transcripts and tries to find the time of the next action
+					returns a list of notes for a particular 'next time'
+	'''
 	def getUniqueNotes(self, lastTime, lastData, dataNotes):
 		nowTime = time.time()
-		dataNotes = [[0, note] for note in dataNotes]
 		if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
+			played, letGo = [],[]
 			for i in range(len(dataNotes)):
 				if dataNotes[i] == True and lastData[i] == False:
-					left, right = Midi.splitLR(dataNotes[i])
-					self.pressDown[0] += left
-					self.pressDown[1] += right
-					lastData = dataNotes
-					lastTime = nowTime
-
+					played.append([0, i])
 				elif dataNotes[i] == False and lastData[i] == True:
-					left, right = Midi.splitLR(dataNotes[i])
-					self.letGo[0] += left
-					self.letGo[1] += right
-					lastData = dataNotes
-					lastTime = nowTime
+					letGo.append([0, i])
 
+		left, right = Midi.splitLR(dataNotes[i])
+		self.pressDown[0] += left
+		self.pressDown[1] += right
+		lastData = dataNotes
+		lastTime = nowTime
+
+		left, right = Midi.splitLR(dataNotes[i])
+		self.letGo[0] += left
+		self.letGo[1] += right
+		lastData = dataNotes
+		lastTime = nowTime
 		return lastData, lastTime
 
 	def play_note(self):
