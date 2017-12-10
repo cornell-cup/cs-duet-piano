@@ -229,7 +229,7 @@ class Main:
 				delta = chord[0] - start
 				chord[0] = delta/float(self.tempo_scale)
 
-
+	#TODO THIS ENTIRE FUNCTION NEEDS HELP. S O S
 	def checkPlaying(self):
 		print ("Unimplemented")
 
@@ -247,7 +247,7 @@ class Main:
 
 if __name__ == "__main__":
 	process = Main()
-	process.intial_match()
+	process.initial_match()
 	#pins: 7 hand f,8 hand f,24 sensors,23 step
 	wiringpi.wiringPiSetupGpio()	
 	channel = 1
