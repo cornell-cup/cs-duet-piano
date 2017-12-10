@@ -10,12 +10,13 @@ from threading import Thread
 noteOffset = 28 # zero indexed notes
 
 def hexToNote(hexcode):
-	hex = hexcode.encode("hex")
+	hex = format(hexcode, '076b')
 	pressed = []
-	for i in range(len(hex) / 4 + 1):
-		sub = hex[i * 4:(i + 1) * 4]  # 3333
-		print sub
-		bin_sub = bin(int(sub, 16))[2:]
+	print hex
+	print()
+	for i in hex:
+		bin_sub = bin(int(i, 16))[2:]
+		print(bin_sub)
 		for key in bin_sub:
 			if key == "1":
 				pressed.append(True)
@@ -27,8 +28,8 @@ def hexToNote(hexcode):
 Params: MIDI integer representation of the key that the pinkie should be on for either hand
 Returns: Hex string representation of the key
 '''
-def getPinkie(key):
-	return hex(key)
+def getPinkie(chord):
+	return hex(min(chord))
 
 
 class Main:
@@ -165,10 +166,10 @@ class Main:
 				returns a list of notes for a particular 'next time'
 	'''
 	def parse_transcript(self, latest_time):
-		update = {0: [], 1: [], 2: [], 3: []}
+		#update = {0: [], 1: [], 2: [], 3: []}
 		for i in range(len(self.robot_transcript), 0, -1):
 			next = self.find_next(i, latest_time)
-			if next[0] > self.nextTime:
+			if next[0] > self.nextTime: #tonext[0]do check validity
 				next = []
 			if i == 0 or i == 1:
 				prevNotes = list(set(self.notesUpdate[i+2])^set(self.notesUpdate[i]))
@@ -193,8 +194,11 @@ class Main:
 		if i == 3:
 			transcript = transcript[self.right_index[1]:]
 		next = []
-		for t in range(transcript):
-			if  transcript[t][0] > self.nextTime:
+		for t in range(len(transcript)):
+			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
+				self.nextTime =  transcript[t][0]
+				next.append( transcript[t][1])
+			elif  transcript[t][0] > self.nextTime:
 				if i == 0:
 					self.left_index[0] = t
 				if i == 2:
@@ -204,9 +208,6 @@ class Main:
 				if i == 3:
 					self.right_index[1] = t
 				break
-			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
-				self.nextTime =  transcript[t][0]
-				next.append( transcript[t][1])
 		next = [self.nextTime, next]
 		return next
 
@@ -240,9 +241,7 @@ class Main:
 		self.left_played[1] += letGo[0]
 		self.right_played[0] += pressDown[1]
 		self.right_played[1] += letGo[1]
-		self.parse_transcript(self.time_current)
-
-
+		self.parse_transcript(time.time())
 
 
 if __name__ == "__main__":
