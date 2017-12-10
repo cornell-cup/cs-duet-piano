@@ -16,7 +16,7 @@ def splitLR(time, keys):
 	if key_max != key_min:
 		left2, right2 = [], []
 		for k in keys:
-			if k <= split:
+			if k < split:
 				left2.append(k)
 			else:
 				right2.append(k)
@@ -38,6 +38,8 @@ def transcribe(name):
 			print('Track {}: {}'.format(i, track.name))
 			track_on, track_off = {}, {}
 			for msg in to_absolute_time(track):
+				#if msg.time > 10000:
+				#	break
 				if not msg.is_meta and msg.type == 'note_on':
 					if msg.time not in track_on:
 						track_on[msg.time] = [msg.note]
@@ -68,3 +70,5 @@ def transcribe(name):
 	transcript = [ [l[0], r[0], l[2], r[2]], [l[1],r[1], l[3], r[3]]]
 
 	return transcript #[primo, secondo] where primo [L, R] and secondo [L and R]
+
+print(transcribe("chopin_wish_pno"))
