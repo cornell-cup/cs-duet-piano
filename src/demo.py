@@ -4,10 +4,11 @@
 #define  f     4    // Does not seem to like capital F
 #define  G     5
 #define  R     0
-import serial
+#define rest   11
 import time
+import wiringpi
 
-connected = False
+
 C = 1
 D = 2
 E = 3
@@ -24,46 +25,35 @@ melody = [E, E, E, R,
                E, G, C, D, E, R,
                f, f, f, f, f, E, E, E,  G, G, f, D, C, R
               ]
-MAX_COUNT = len(melody) / 2
+MAX_COUNT = len(melody)
 
-def playTone(pin2play):
-    duration = 0.3
-    pause = 0.1
-    if pin2play == 0:
-        while time.time() - now < duration:
-            ser.write(pin2play)
-    else:
-        while time.time() - now < pause:
-            ser.write(pin2play)
-            #digitalWrite(pin2play, HIGH)
-            #digitalWrite(pin2play, LOW)
+def playTone(pin2play, dur):
+    print(pin2play)
+    buf = str(pin2play) + "\n"
+    stuff = wiringpi.wiringPiSPIDataRW(channel, buf)
+    time.sleep(dur)
 
 def loop():
-    pin=0
+    prev = 0
     for i in range(MAX_COUNT):
         tone = melody[i]
-        switch (tone):
-            case 1: pin = 2
-                break
-            case 2: pin = 3
-                break
-            case 3: pin = 4
-                break
-            case 4: pin = 5
-                break
-            case 5: pin = 6
-                break
-            default: pin = 0
-                break
-
-        playTone(pin)
+        print(prev, tone)
+        if prev == tone:
+            playTone(11, 0.02)
+            playTone(tone, 0.3)
+            prev = tone
+        elif tone == 0:
+            playTone(prev, 0.3)
+        else:
+            playTone(tone, 0.3)
+            prev = tone
+    playTone(0, 0.3)
 
 if __name__ == "__main__":
 
-    ser = serial.Serial("COM11", 9600)
+    wiringpi.wiringPiSetupGpio()
+    channel = 1
+    speed = 500
+    wiringpi.wiringPiSPISetup(channel, speed)
 
-    while not connected:
-        serin = ser.read()
-        connected = True
     loop()
-    ser.close()
