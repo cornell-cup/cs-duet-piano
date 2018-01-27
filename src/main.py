@@ -45,11 +45,11 @@ class Main:
 		self.notesUpdate = {0: [], 1: [], 2: [], 3: []}
 
 		self.left_played = []
-		self.left_index = [[],[]]
+		self.left_index = [0,0]
 		self.left_queue = []
 
 		self.right_played = []
-		self.right_index = [[],[]]
+		self.right_index = [0,0]
 		self.right_queue = []
 
 		self.transcript = []
@@ -101,11 +101,11 @@ class Main:
 					self.human_letGo[1] = self.letGo[1]
 
 		#print(self.transcript)
-		#print(self.human_played[0][0][1])
-		#print(self.human_played[1][0][1])
+		print(self.human_played[0][0][1])
+		print(self.human_played[1][0][1])
 		#print(len(self.human_played[0]))
 		#print(len(self.human_played[1]))
-		total = sum(x[1] for x in self.human_played[0][0]) + sum((x[1] for x in  self.human_played[1][0]))
+		total = sum(self.human_played[0][0][1]) + sum(self.human_played[1][0][1])
 
 		human_average =  total/ \
 						(len(self.human_played[0]) + len(self.human_played[1]))
@@ -125,7 +125,7 @@ class Main:
 
 		currNoteL, currNoteR, letGoL, letGoR = self.human_transcript[0][skipToL], self.human_transcript[1][skipToR],\
 											   self.human_transcript[2][skipToL2], self.human_transcript[3][skipToR2]
-
+		left_time, left_time2, right_time, right_time2 = 0,0,0,0
 		if currNoteL and self.human_played[0]:
 			if currNoteL[1] == self.human_played[0][-1]:
 				left_time = currNoteL[0]
@@ -197,7 +197,7 @@ class Main:
 	'''
 	def parse_transcript(self, latest_time):
 		#update = {0: [], 1: [], 2: [], 3: []}
-		for i in range(len(self.robot_transcript), 0, -1):
+		for i in range(len(self.robot_transcript)-1, 0, -1):
 			next = self.find_next(i, latest_time)
 			if next[0] > self.nextTime: #tonext[0]do check validity
 				next = []
@@ -223,6 +223,7 @@ class Main:
 			transcript = transcript[self.right_index[0]:]
 		if i == 3:
 			transcript = transcript[self.right_index[1]:]
+		print(transcript)
 		next = []
 		for t in range(len(transcript)):
 			if  transcript[t][0] > latest_time and (self.nextTime == -1 or self.nextTime >  transcript[t][0]):
