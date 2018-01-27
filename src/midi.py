@@ -38,8 +38,8 @@ def transcribe(name):
 			print('Track {}: {}'.format(i, track.name))
 			track_on, track_off = {}, {}
 			for msg in to_absolute_time(track):
-				#if msg.time > 10000:
-				#	break
+				if msg.time > 10000:
+					break
 				if not msg.is_meta and msg.type == 'note_on':
 					if msg.time not in track_on:
 						track_on[msg.time] = [msg.note]
@@ -71,4 +71,4 @@ def transcribe(name):
 
 	return transcript #[primo, secondo] where primo [L, R] and secondo [L and R]
 
-print(transcribe("chopin_wish_pno"))
+#print(transcribe("when_the_saints_pnoduet"))

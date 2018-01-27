@@ -9,6 +9,7 @@ from threading import Thread
 
 noteOffset = 28 # zero indexed notes
 
+
 def hexToNote(hexcode):
 	hex = format(hexcode, '076b')
 	pressed = []
@@ -16,7 +17,6 @@ def hexToNote(hexcode):
 	print()
 	for i in hex:
 		bin_sub = bin(int(i, 16))[2:]
-		print(bin_sub)
 		for key in bin_sub:
 			if key == "1":
 				pressed.append(True)
@@ -33,6 +33,12 @@ def noteToHex(notesUpdate):
 	for i in right:
 		hexcode += str(hex(i))
 	return hexcode
+
+file = [
+	hexToNote(0x00000080080000000),
+	hexToNote(0x00000008008000000),
+	hexToNote(0x00000004004000000)
+]
 
 '''
 Params: MIDI integer representation of the key that the pinkie should be on for either hand
@@ -71,19 +77,20 @@ class Main:
 		self.pressDown = [[],[]]
 
 		self.nextTime = -1
+		self.counter = 0
 
 	def setSong(self):
-		song = Rec.recognizeAudio()
-		self.transcript = Midi.transcribe(song)
+		#song = Rec.recognizeAudio()
+		self.transcript = Midi.transcribe("when_the_saints_pnoduet")
 
-	def initial_match(self, spi):
+	def initial_match(self):
 		set = Thread(target=self.setSong)
 		set.start()
 		print "running simultaneously"
 		#TODO MANUAL NOTE CHECK
-		while self.transcript == []:
+		if self.transcript == []:
 			now = time.time()
-			lastData = []  # last note value, last timestamp
+			lastData = [False]*76  # last note value, last timestamp
 			lastTime = 0
 			data = wiringpi.digitalRead(23) #pin 23
 			dataNotes = hexToNote(data)
@@ -93,17 +100,16 @@ class Main:
 			if letGo != []:
 				self.human_letGo.append(letGo)
 
-		print(self.transcript)
-
-		human_average = sum(self.human_played[0] + self.human_played[1]) / \
-						len(self.human_played[0] + self.human_played[1])
 		if human_average > 64:
-			self.human_side = "R"
-			self.robot_transcript = self.transcript[0]
+			self.human_side = "R" #why is this flipped?? investigate hte fuck out
+			self.robot_transcript = self.transcript[1]
+			self.human_transcript = self.transcript[0]
 		else:
 			self.human_side = "L"
+			self.robot_transcript = self.transcript[0]
 			self.human_transcript = self.transcript[1]
 
+		print(self.human_transcript)
 		# based on time_current and notes played by human, get robot note
 		skipToL, skipToR, skipToL2, skipToR2 = len(self.human_played[0]), len(self.human_played[1]), \
 											   len(self.human_letGo[0]), len(self.human_letGo[1])
@@ -111,14 +117,18 @@ class Main:
 		currNoteL, currNoteR, letGoL, letGoR = self.human_transcript[0][skipToL], self.human_transcript[1][skipToR],\
 											   self.human_transcript[2][skipToL2], self.human_transcript[3][skipToR2]
 
-		if currNoteL[1] == self.human_played[0][-1]:
-			left_time = currNoteL[0]
-		if currNoteR[1] == self.human_played[1][-1]:
-			right_time = currNoteR[0]
-		if letGoL[1] == self.human_letGo[0][-1]:
-			left_time2 = letGoL[1]
-		if letGoR[1] == self.human_letGo[1][-1]:
-			right_time2 = letGoR[1]
+		if currNoteL and self.human_played[0]:
+			if currNoteL[1] == self.human_played[0][-1]:
+				left_time = currNoteL[0]
+		if currNoteR and self.human_played[1]:
+			if currNoteR[1] == self.human_played[1][-1]:
+				right_time = currNoteR[0]
+		if letGoL and self.human_letGo[0]:
+			if letGoL[1] == self.human_letGo[0][-1]:
+				left_time2 = letGoL[1]
+		if letGoR and self.human_letGo[1]:
+			if letGoR[1] == self.human_letGo[1][-1]:
+				right_time2 = letGoR[1]
 
 		self.parse_transcript(max(left_time, left_time2, right_time, right_time2))
 
@@ -131,13 +141,14 @@ class Main:
 	'''
 	def getUniqueNotes(self, lastTime, lastData, dataNotes):
 		nowTime = time.time()*1000
+		played, letGo = [],[]
 		if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 			played, letGo = [],[]
 			for i in range(len(dataNotes)):
 				if dataNotes[i] == True and lastData[i] == False:
-					played.append([0, i])
+					played.append(i+noteOffset)
 				elif dataNotes[i] == False and lastData[i] == True:
-					letGo.append([0, i])
+					letGo.append(i+noteOffset)
 
 		#parsing based on splitting keyboard in half
 		if self.human_side == "L": #robot plays notes greater than 64
@@ -149,13 +160,14 @@ class Main:
 
 		#else: initial match -> do not know yet. its all human
 
-		left, right = Midi.splitLR(played)
-		self.pressDown[0] += left
-		self.pressDown[1] += right
-
-		left, right = Midi.splitLR(letGo)
-		self.letGo[0] += left
-		self.letGo[1] += right
+		if len(played) > 0:
+			left, right = Midi.splitLR(0,played)
+			self.pressDown[0] += left
+			self.pressDown[1] += right
+		elif len(letGo) > 0 :
+			left, right = Midi.splitLR(0,letGo)
+			self.letGo[0] += left
+			self.letGo[1] += right
 		lastData = dataNotes
 		lastTime = nowTime
 		return lastData, lastTime
@@ -258,7 +270,7 @@ if __name__ == "__main__":
 	process = Main()
 	process.initial_match()
 	#pins: 7 hand f,8 hand f,24 sensors,23 step
-	wiringpi.wiringPiSetupGpio()	
+	wiringpi.wiringPiSetupGpio()
 	channel = 1
 	speed = 500000
 	wiringpi.wiringPiSPISetup(channel, speed)
@@ -271,7 +283,7 @@ if __name__ == "__main__":
 	retlen, retdata = wiringpi.wiringPiSPIDataRW(channel, buf)
 	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
-	# append to list that would store 5 seconds -> tempo matching () -> bpm -> 
+	# append to list that would store 5 seconds -> tempo matching () -> bpm ->
 	# update tempo_scale = new bpm/old bpm
 	# continue match()
 
@@ -295,7 +307,7 @@ if __name__ == "__main__":
 			# song reaches end and end is true then
 			# need end of song check somewhere
 			nowTime = time.time()
-		
+
 			if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 				msg = mido.Message()
 				for i in range (0, len(dataNotes)):
