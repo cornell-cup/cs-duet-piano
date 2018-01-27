@@ -85,11 +85,14 @@ class Main:
 			#while time.time() - now < 5:
 			while self.counter < len(file) :
 				#data = wiringpi.digitalRead(23) #pin 23
-				print(file)
+				#print(file)
 				dataNotes = file[self.counter]
 				self.counter += 1
 				#dataNotes = hexToNote(data)
 				lastData, lastTime = self.getUniqueNotes(lastTime, lastData, dataNotes)
+				print(self.pressDown)
+				print(self.letGo)
+				print()
 				if self.pressDown != []:
 					self.human_played[0] =self.pressDown[0]
 					self.human_played[1] =self.pressDown[1]
@@ -97,22 +100,25 @@ class Main:
 					self.human_letGo[0] = self.letGo[0]
 					self.human_letGo[1] = self.letGo[1]
 
-		print(self.transcript)
-		print(self.human_played[0][0][1])
-		print(self.human_played[1][0][1])
-		print(len(self.human_played[0]))
-		print(len(self.human_played[1]))
-		total = sum(self.human_played[0][0][1]) + sum(self.human_played[1][0][1][0])
+		#print(self.transcript)
+		#print(self.human_played[0][0][1])
+		#print(self.human_played[1][0][1])
+		#print(len(self.human_played[0]))
+		#print(len(self.human_played[1]))
+		total = sum(x[1] for x in self.human_played[0][0]) + sum((x[1] for x in  self.human_played[1][0]))
 
-		human_average =  / \
+		human_average =  total/ \
 						(len(self.human_played[0]) + len(self.human_played[1]))
 		if human_average > 64:
-			self.human_side = "R"
-			self.robot_transcript = self.transcript[0]
+			self.human_side = "R" #why is this flipped?? investigate hte fuck out
+			self.robot_transcript = self.transcript[1]
+			self.human_transcript = self.transcript[0]
 		else:
 			self.human_side = "L"
+			self.robot_transcript = self.transcript[0]
 			self.human_transcript = self.transcript[1]
 
+		print(self.human_transcript)
 		# based on time_current and notes played by human, get robot note
 		skipToL, skipToR, skipToL2, skipToR2 = len(self.human_played[0]), len(self.human_played[1]), \
 											   len(self.human_letGo[0]), len(self.human_letGo[1])
@@ -120,14 +126,18 @@ class Main:
 		currNoteL, currNoteR, letGoL, letGoR = self.human_transcript[0][skipToL], self.human_transcript[1][skipToR],\
 											   self.human_transcript[2][skipToL2], self.human_transcript[3][skipToR2]
 
-		if currNoteL[1] == self.human_played[0][-1]:
-			left_time = currNoteL[0]
-		if currNoteR[1] == self.human_played[1][-1]:
-			right_time = currNoteR[0]
-		if letGoL[1] == self.human_letGo[0][-1]:
-			left_time2 = letGoL[1]
-		if letGoR[1] == self.human_letGo[1][-1]:
-			right_time2 = letGoR[1]
+		if currNoteL and self.human_played[0]:
+			if currNoteL[1] == self.human_played[0][-1]:
+				left_time = currNoteL[0]
+		if currNoteR and self.human_played[1]:
+			if currNoteR[1] == self.human_played[1][-1]:
+				right_time = currNoteR[0]
+		if letGoL and self.human_letGo[0]:
+			if letGoL[1] == self.human_letGo[0][-1]:
+				left_time2 = letGoL[1]
+		if letGoR and self.human_letGo[1]:
+			if letGoR[1] == self.human_letGo[1][-1]:
+				right_time2 = letGoR[1]
 
 		self.parse_transcript(max(left_time, left_time2, right_time, right_time2))
 
