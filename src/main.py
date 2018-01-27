@@ -24,11 +24,22 @@ def hexToNote(hexcode):
 				pressed.append(False)
 	return pressed
 
+def noteToHex(notesUpdate):
+	left = notesUpdate[0]
+	right = notesUpdate[2]
+	hexcode = ""
+	for i in left:
+		hexcode += str(hex(i))
+	for i in right:
+		hexcode += str(hex(i))
+	return hexcode
+
 file = [
 	hexToNote(0x00000080080000000),
 	hexToNote(0x00000008008000000),
 	hexToNote(0x00000004004000000)
 ]
+
 '''
 Params: MIDI integer representation of the key that the pinkie should be on for either hand
 Returns: Hex string representation of the key
@@ -77,10 +88,17 @@ class Main:
 		set.start()
 		print "running simultaneously"
 		#TODO MANUAL NOTE CHECK
-		while self.transcript == []:
+		if self.transcript == []:
 			now = time.time()
 			lastData = [False]*76  # last note value, last timestamp
 			lastTime = 0
+			data = wiringpi.digitalRead(23) #pin 23
+			dataNotes = hexToNote(data)
+			lastData, lastTime, pressDown, letGo = self.getUniqueNotes(lastTime, lastData, dataNotes)
+			if pressDown != []:
+				self.human_played.append(pressDown)
+			if letGo != []:
+				self.human_letGo.append(letGo)
 
 			#while time.time() - now < 5:
 			while self.counter < len(file) :
@@ -109,6 +127,7 @@ class Main:
 
 		human_average =  total/ \
 						(len(self.human_played[0]) + len(self.human_played[1]))
+
 		if human_average > 64:
 			self.human_side = "R" #why is this flipped?? investigate hte fuck out
 			self.robot_transcript = self.transcript[1]
@@ -149,7 +168,7 @@ class Main:
 					returns a list of notes for a particular 'next time'
 	'''
 	def getUniqueNotes(self, lastTime, lastData, dataNotes):
-		nowTime = time.time()
+		nowTime = time.time()*1000
 		played, letGo = [],[]
 		if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 			played, letGo = [],[]
@@ -185,6 +204,7 @@ class Main:
 		self.time_current = time.time()*1000
 		while self.time_current!= self.nextTime:
 			self.time_current = time.time()*1000
+		msg = noteToHex(self.notesUpdate)
 		# TODO WRITE MSG TO RASPBERRY PI
 		# TODO MSG: (left and right pinkie position, left and right finger positions)
 		# play self.notesUpdate after analyzing it
@@ -279,7 +299,7 @@ if __name__ == "__main__":
 	process = Main()
 	process.initial_match()
 	#pins: 7 hand f,8 hand f,24 sensors,23 step
-	wiringpi.wiringPiSetupGpio()	
+	wiringpi.wiringPiSetupGpio()
 	channel = 1
 	speed = 500000
 	wiringpi.wiringPiSPISetup(channel, speed)
@@ -292,7 +312,7 @@ if __name__ == "__main__":
 	retlen, retdata = wiringpi.wiringPiSPIDataRW(channel, buf)
 	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
-	# append to list that would store 5 seconds -> tempo matching () -> bpm -> 
+	# append to list that would store 5 seconds -> tempo matching () -> bpm ->
 	# update tempo_scale = new bpm/old bpm
 	# continue match()
 
@@ -302,12 +322,12 @@ if __name__ == "__main__":
 		track = mido.MidiTrack()
 		tempoSample.tracks.append(track)
 
-		now = time.time()
+		now = time.time()*1000
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
 		pressDown = []
 		letGo = []
-		while time.time() - now < 5:
+		while time.time()*1000 - now < 5:
 			data = wiringpi.digitalRead(24) #pin 24
 			dataNotes = hexToNote(data)
 
@@ -316,7 +336,7 @@ if __name__ == "__main__":
 			# song reaches end and end is true then
 			# need end of song check somewhere
 			nowTime = time.time()
-		
+
 			if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 				msg = mido.Message()
 				for i in range (0, len(dataNotes)):
