@@ -28,10 +28,12 @@ def noteToHex(notesUpdate):
 	left = notesUpdate[0]
 	right = notesUpdate[2]
 	hexcode = ""
-	for i in left:
-		hexcode += str(hex(i))
-	for i in right:
-		hexcode += str(hex(i))
+	if left != [] and left != None:
+		for i in left[1]:
+			hexcode += str(hex(i))
+	if right != [] and right != None:
+		for i in right[1]:
+			hexcode += str(hex(i))
 	return hexcode
 
 file = [
