@@ -94,11 +94,11 @@ class Main:
 			lastTime = 0
 			data = wiringpi.digitalRead(23) #pin 23
 			dataNotes = hexToNote(data)
-			lastData, lastTime, pressDown, letGo = self.getUniqueNotes(lastTime, lastData, dataNotes)
-			if pressDown != []:
-				self.human_played.append(pressDown)
-			if letGo != []:
-				self.human_letGo.append(letGo)
+			lastData, lastTime = self.getUniqueNotes(lastTime, lastData, dataNotes)
+			if self.pressDown != []:
+				self.human_played.append(self.pressDown)
+			if self.letGo != []:
+				self.human_letGo.append(self.letGo)
 
 			#while time.time() - now < 5:
 			while self.counter < len(file) :
