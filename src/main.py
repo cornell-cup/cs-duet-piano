@@ -310,6 +310,7 @@ if __name__ == "__main__":
 	process = Main()
 	process.initial_match()
 	#pins: 7 hand f,8 hand f,24 sensors,23 step
+	'''
 	wiringpi.wiringPiSetupGpio()
 	channel = 1
 	speed = 500000
@@ -317,10 +318,11 @@ if __name__ == "__main__":
 	wiringpi.pinMode(7, 1)
 	wiringpi.pinMode(8, 1)
 	wiringpi.pinMode(23, 1)
-	wiringpi.pinMode(24, 1)
+	wiringpi.pinMode(24, 1) 
+	'''
 	buf = "hello"
 	end = False
-	retlen, retdata = wiringpi.wiringPiSPIDataRW(channel, buf)
+	#retlen, retdata = wiringpi.wiringPiSPIDataRW(channel, buf)
 	# receiving 84 bits / 8 = 11 bytes
 	# convert hex to mido keys
 	# append to list that would store 5 seconds -> tempo matching () -> bpm ->
