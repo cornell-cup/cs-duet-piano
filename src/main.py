@@ -24,6 +24,16 @@ def hexToNote(hexcode):
 				pressed.append(False)
 	return pressed
 
+def noteToHex(notesUpdate):
+	left = notesUpdate[0]
+	right = notesUpdate[2]
+	hexcode = ""
+	for i in left:
+		hexcode += str(hex(i))
+	for i in right:
+		hexcode += str(hex(i))
+	return hexcode
+
 '''
 Params: MIDI integer representation of the key that the pinkie should be on for either hand
 Returns: Hex string representation of the key
@@ -75,14 +85,13 @@ class Main:
 			now = time.time()
 			lastData = []  # last note value, last timestamp
 			lastTime = 0
-			while time.time() - now < 5:
-				data = wiringpi.digitalRead(23) #pin 23
-				dataNotes = hexToNote(data)
-				lastData, lastTime, pressDown, letGo = self.getUniqueNotes(lastTime, lastData, dataNotes)
-				if pressDown != []:
-					self.human_played.append(pressDown)
-				if letGo != []:
-					self.human_letGo.append(letGo)
+			data = wiringpi.digitalRead(23) #pin 23
+			dataNotes = hexToNote(data)
+			lastData, lastTime, pressDown, letGo = self.getUniqueNotes(lastTime, lastData, dataNotes)
+			if pressDown != []:
+				self.human_played.append(pressDown)
+			if letGo != []:
+				self.human_letGo.append(letGo)
 
 		print(self.transcript)
 
@@ -121,7 +130,7 @@ class Main:
 					returns a list of notes for a particular 'next time'
 	'''
 	def getUniqueNotes(self, lastTime, lastData, dataNotes):
-		nowTime = time.time()
+		nowTime = time.time()*1000
 		if dataNotes != lastData and math.floor(nowTime) != math.floor(lastTime):
 			played, letGo = [],[]
 			for i in range(len(dataNotes)):
@@ -155,6 +164,7 @@ class Main:
 		self.time_current = time.time()*1000
 		while self.time_current!= self.nextTime:
 			self.time_current = time.time()*1000
+		msg = noteToHex(self.notesUpdate)
 		# TODO WRITE MSG TO RASPBERRY PI
 		# TODO MSG: (left and right pinkie position, left and right finger positions)
 		# play self.notesUpdate after analyzing it
@@ -271,12 +281,12 @@ if __name__ == "__main__":
 		track = mido.MidiTrack()
 		tempoSample.tracks.append(track)
 
-		now = time.time()
+		now = time.time()*1000
 		lastData = []  # last note value, last timestamp
 		lastTime = 0
 		pressDown = []
 		letGo = []
-		while time.time() - now < 5:
+		while time.time()*1000 - now < 5:
 			data = wiringpi.digitalRead(24) #pin 24
 			dataNotes = hexToNote(data)
 
