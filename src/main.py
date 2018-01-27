@@ -25,8 +25,10 @@ def hexToNote(hexcode):
 	return pressed
 
 def noteToHex(notesUpdate):
+	print(notesUpdate)
 	left = notesUpdate[0]
 	right = notesUpdate[2]
+	print(right)
 	hexcode = ""
 	for i in left:
 		hexcode += str(hex(i))
@@ -202,8 +204,10 @@ class Main:
 
 	def play_note(self):
 		self.time_current = time.time()*1000
-		while self.time_current!= self.nextTime:
+		timeDiff = abs(self.time_current - time.time()*1000)
+		while timeDiff >= 30:
 			self.time_current = time.time()*1000
+			timeDiff = abs(self.time_current - time.time() * 1000)
 		msg = noteToHex(self.notesUpdate)
 		# TODO WRITE MSG TO RASPBERRY PI
 		# TODO MSG: (left and right pinkie position, left and right finger positions)
@@ -222,6 +226,10 @@ class Main:
 			if next[0] > self.nextTime: #tonext[0]do check validity
 				next = []
 			if i == 0 or i == 1:
+				print(self.notesUpdate[i+2])
+				print(set(self.notesUpdate[i+2]))
+				print(self.notesUpdate[i])
+				print(set(self.notesUpdate[i+2])^set(self.notesUpdate[i]))
 				prevNotes = list(set(self.notesUpdate[i+2])^set(self.notesUpdate[i]))
 				self.notesUpdate[i] = list(set(prevNotes + next)).sort()  #not sure if sorting is necessary
 			else:
@@ -259,7 +267,8 @@ class Main:
 				if i == 3:
 					self.right_index[1] = t
 				break
-		next = [self.nextTime, next]
+		next_flat=  tuple([item for x in next for item in x])
+		next = [self.nextTime, next_flat]
 		return next
 
 	'''
